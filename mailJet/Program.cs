@@ -1,12 +1,14 @@
 ﻿using Mailjet.Client;
 using Mailjet.Client.Resources;
+using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
 using System;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace mailJet
 {
-    internal abstract class Program
+    public static class Program
     {
         private static void Main()
         {
@@ -15,7 +17,19 @@ namespace mailJet
 
         private static async Task RunAsync()
         {
-            var client = new MailjetClient("apiKey", "secret");
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.Development.json", optional: true);
+        
+            IConfiguration config = builder.Build();
+            
+            var apiKey = config.GetSection("ApiKey").Value;
+            var secret = config.GetSection("Secret").Value;
+            var emailFrom = config.GetSection("EmailFrom").Value;
+            var nameFrom = config.GetSection("NameFrom").Value;
+            var emailTo = config.GetSection("EmailTo").Value;
+            
+            var client = new MailjetClient(apiKey, secret);
             var request = new MailjetRequest
                 {
                     Resource = SendV31.Resource
@@ -25,15 +39,15 @@ namespace mailJet
                         {
                             "From",
                             new JObject {
-                                {"Email", "from@email.com"},
-                                {"Name", "name"}
+                                {"Email", emailFrom},
+                                {"Name", nameFrom}
                             }
                         }, {
                             "To",
                             new JArray {
                                 new JObject {
                                     {
-                                        "Email", "to@email.com"
+                                        "Email", emailTo
                                     },
                                 }
                             }
